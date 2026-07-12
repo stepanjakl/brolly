@@ -3,7 +3,9 @@
 import { useState } from "react";
 import CityCard from "@/components/CityCard";
 import CitySearch from "@/components/CitySearch";
+import UnitToggle from "@/components/UnitToggle";
 import { addCity, removeCity, useCities } from "@/hooks/useCities";
+import { useUnit } from "@/hooks/useUnit";
 import { cityKey } from "@/lib/cityKey";
 import type { City } from "@/lib/types";
 
@@ -12,6 +14,7 @@ import type { City } from "@/lib/types";
 
 export default function Home() {
   const cities = useCities();
+  const unit = useUnit();
   const [announcement, setAnnouncement] = useState("");
 
   function handleAdd(city: City) {
@@ -28,6 +31,7 @@ export default function Home() {
     <main className="flex flex-1 flex-col gap-4 p-4 md:gap-6 md:p-6 lg:gap-8 lg:p-8">
       <header className="flex items-center justify-between rounded-full bg-white py-2 pr-2 pl-6">
         <h1 className="text-xl font-bold">brolly</h1>
+        <UnitToggle />
       </header>
 
       <CitySearch onAdd={handleAdd} />
@@ -37,7 +41,7 @@ export default function Home() {
           <li key={cityKey(city)}>
             <CityCard
               city={city}
-              unit="c"
+              unit={unit}
               onRemove={() => handleRemove(city)}
             />
           </li>
