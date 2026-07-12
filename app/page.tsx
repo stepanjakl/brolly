@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "react-aria-components";
+import CityCard from "@/components/CityCard";
 import CitySearch from "@/components/CitySearch";
 import { addCity, removeCity, useCities } from "@/hooks/useCities";
 import { cityKey } from "@/lib/cityKey";
@@ -34,22 +34,12 @@ export default function Home() {
 
       <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {cities.map((city) => (
-          <li
-            key={cityKey(city)}
-            className="flex items-center justify-between rounded-3xl bg-white p-5"
-          >
-            <span className="font-semibold">
-              {city.name}{" "}
-              <span className="text-xs font-medium text-slate-500">
-                {city.country}
-              </span>
-            </span>
-            <Button
-              onPress={() => handleRemove(city)}
-              className="cursor-pointer rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600 transition hover:bg-slate-200"
-            >
-              Remove
-            </Button>
+          <li key={cityKey(city)}>
+            <CityCard
+              city={city}
+              unit="c"
+              onRemove={() => handleRemove(city)}
+            />
           </li>
         ))}
       </ul>

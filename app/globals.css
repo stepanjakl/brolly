@@ -23,4 +23,23 @@
 @theme {
   /* every feedback transition runs at one speed; the bare `transition` utility reads this */
   --default-transition-duration: 100ms;
+
+  /* one step below text-xs, for fine print like the card's freshness label */
+  --text-2xs: 0.6875rem;
+  --text-2xs--line-height: 0.9375rem;
+
+  /* card entrance - the one playful moment; everything else stays at 100-200ms */
+  --animate-pop-in: pop-in 0.45s cubic-bezier(0.18, 0.89, 0.32, 1.15) both;
+
+  @keyframes pop-in {
+    from {
+      opacity: 0;
+      transform: translateY(0.75rem) scale(0.97);
+    }
+
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
 }
