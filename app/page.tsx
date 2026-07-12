@@ -1,13 +1,17 @@
 "use client";
 
+import RefreshIcon from "@material-symbols/svg-700/rounded/refresh.svg";
 import { useState, useSyncExternalStore } from "react";
 import CityCard from "@/components/CityCard";
 import CityDetailSheet from "@/components/CityDetailSheet";
 import CitySearch from "@/components/CitySearch";
 import EmptyState from "@/components/EmptyState";
+import TitledButton from "@/components/TitledButton";
 import UnitToggle from "@/components/UnitToggle";
 import { addCity, removeCity, useCities } from "@/hooks/useCities";
+import { useMinPending } from "@/hooks/useMinPending";
 import { useUnit } from "@/hooks/useUnit";
+import { forgetWeather, useRefreshAllWeather } from "@/hooks/useWeather";
 import { cityKey } from "@/lib/cityKey";
 import type { City } from "@/lib/types";
 
@@ -31,8 +35,23 @@ export default function Home() {
   const hydrated = useHydrated();
   const [detailCity, setDetailCity] = useState<City | null>(null);
   const [announcement, setAnnouncement] = useState("");
+  const refreshAllWeather = useRefreshAllWeather();
+  const [refreshing, setRefreshing] = useState(false);
+  // cache-hit refreshes resolve near-instantly; the held beat keeps the
+  // spinner from flicking for a single frame
+  const refreshingHeld = useMinPending(refreshing);
 
   const showEmpty = hydrated && cities.length === 0;
+
+  async function refreshAll() {
+    setRefreshing(true);
+    try {
+      await refreshAllWeather();
+      setAnnouncement("Weather refreshed");
+    } finally {
+      setRefreshing(false);
+    }
+  }
 
   function handleAdd(city: City) {
     addCity(city);
@@ -41,6 +60,7 @@ export default function Home() {
 
   function handleRemove(city: City) {
     removeCity(city);
+    forgetWeather(city);
     setAnnouncement(`${city.name} removed`);
     if (detailCity && cityKey(detailCity) === cityKey(city)) {
       setDetailCity(null);
@@ -77,6 +97,28 @@ export default function Home() {
           </ul>
         )
       ) : null}
+
+      <footer className="mt-auto pt-4 text-center text-xs font-medium text-slate-500">
+        weather refreshes every 10 minutes{" "}
+        <TitledButton
+          label="Refresh all weather now"
+          onPress={refreshAll}
+          isDisabled={refreshingHeld}
+          className="inline-grid size-5 cursor-pointer place-items-center rounded-full bg-white align-middle transition hover:bg-slate-100 disabled:cursor-default pressed:scale-90"
+        >
+          <RefreshIcon
+            aria-hidden
+            className={`size-3.5 fill-current ${refreshingHeld ? "animate-spin" : ""}`}
+          />
+        </TitledButton>{" "}
+        · data by{" "}
+        <a
+          href="https://openweathermap.org"
+          className="underline decoration-slate-400 underline-offset-2 transition hover:text-slate-600 hover:decoration-slate-500"
+        >
+          OpenWeather
+        </a>
+      </footer>
 
       {/* announces add/remove to screen readers without moving focus */}
       <p aria-live="polite" className="sr-only">
