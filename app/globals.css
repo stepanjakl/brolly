@@ -1,0 +1,26 @@
+@import "tailwindcss";
+
+/* variants (pressed:, selected:, entering:, …) for React Aria's data-* states */
+@plugin "tailwindcss-react-aria-components";
+
+@theme inline {
+  --font-sans: var(--font-open-runde), ui-rounded, system-ui, sans-serif;
+}
+
+@layer base {
+  /* light-only by design; keeps UA widgets (scrollbars, form controls) light too */
+  html {
+    color-scheme: light;
+  }
+
+  /* one focus ring for every control, defined once */
+  :is(a, button, input):focus-visible {
+    outline: 2px solid var(--color-sky-600);
+    outline-offset: 2px;
+  }
+}
+
+@theme {
+  /* every feedback transition runs at one speed; the bare `transition` utility reads this */
+  --default-transition-duration: 100ms;
+}
