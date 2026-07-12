@@ -8,6 +8,17 @@
 }
 
 @layer base {
+  /* The floating-layer ladder, in one place - these values are a cross-file
+     contract, so no component declares its own number. In :root rather than
+     @theme because the popover consumes one via an inline style var(), which
+     Tailwind's theme tree-shaking can't see. */
+  :root {
+    --z-header: 10;
+    --z-search-popover: 15;
+    --z-search-input: 20;
+    --z-sheet: 20;
+  }
+
   /* light-only by design; keeps UA widgets (scrollbars, form controls) light too */
   html {
     color-scheme: light;
@@ -30,6 +41,63 @@
 
   /* card entrance - the one playful moment; everything else stays at 100-200ms */
   --animate-pop-in: pop-in 0.45s cubic-bezier(0.18, 0.89, 0.32, 1.15) both;
+
+  /* Detail sheet: quick fade+scale, eased out in (150ms), eased in out
+     (100ms). The `both` fill matters: React Aria unmounts only once every
+     exit animation ends, so the shorter sheet-out must hold its final frame
+     while the backdrop finishes - without it the sheet pops back visible. */
+  --animate-sheet-in: sheet-in 0.15s ease-out both;
+  --animate-sheet-out: sheet-out 0.1s ease-in both;
+
+  /* the mobile bottom sheet drifts up from the bottom edge instead */
+  --animate-sheet-in-up: sheet-in-up 0.15s ease-out both;
+  --animate-sheet-out-down: sheet-out-down 0.1s ease-in both;
+
+  /* The backdrop fades its background-colour, NOT element opacity: the sheet
+     is a child of the overlay, so overlay opacity would multiply with the
+     sheet's own fade and snap it invisible early. */
+  --animate-backdrop-in: backdrop-in 0.15s linear both;
+  --animate-backdrop-out: backdrop-out 0.15s linear both;
+
+  @keyframes backdrop-in {
+    from {
+      background-color: transparent;
+    }
+  }
+
+  @keyframes backdrop-out {
+    to {
+      background-color: transparent;
+    }
+  }
+
+  @keyframes sheet-in-up {
+    from {
+      opacity: 0;
+      transform: translateY(1rem) scale(0.95);
+    }
+  }
+
+  @keyframes sheet-out-down {
+    to {
+      opacity: 0;
+      transform: translateY(1rem) scale(0.95);
+    }
+  }
+
+  @keyframes sheet-in {
+    from {
+      opacity: 0;
+      transform: translate(0.5rem, -0.5rem) scale(0.95);
+    }
+  }
+
+  @keyframes sheet-out {
+    to {
+      opacity: 0;
+      transform: translate(0.5rem, -0.5rem) scale(0.95);
+    }
+  }
 
   @keyframes pop-in {
     from {

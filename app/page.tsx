@@ -2,6 +2,7 @@
 
 import { useState, useSyncExternalStore } from "react";
 import CityCard from "@/components/CityCard";
+import CityDetailSheet from "@/components/CityDetailSheet";
 import CitySearch from "@/components/CitySearch";
 import EmptyState from "@/components/EmptyState";
 import UnitToggle from "@/components/UnitToggle";
@@ -28,6 +29,7 @@ export default function Home() {
   const cities = useCities();
   const unit = useUnit();
   const hydrated = useHydrated();
+  const [detailCity, setDetailCity] = useState<City | null>(null);
   const [announcement, setAnnouncement] = useState("");
 
   const showEmpty = hydrated && cities.length === 0;
@@ -40,6 +42,9 @@ export default function Home() {
   function handleRemove(city: City) {
     removeCity(city);
     setAnnouncement(`${city.name} removed`);
+    if (detailCity && cityKey(detailCity) === cityKey(city)) {
+      setDetailCity(null);
+    }
   }
 
   return (
@@ -64,6 +69,7 @@ export default function Home() {
                 <CityCard
                   city={city}
                   unit={unit}
+                  onOpenDetail={() => setDetailCity(city)}
                   onRemove={() => handleRemove(city)}
                 />
               </li>
@@ -76,6 +82,13 @@ export default function Home() {
       <p aria-live="polite" className="sr-only">
         {announcement}
       </p>
+
+      <CityDetailSheet
+        city={detailCity}
+        unit={unit}
+        onClose={() => setDetailCity(null)}
+        onRemove={handleRemove}
+      />
     </main>
   );
 }

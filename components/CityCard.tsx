@@ -19,6 +19,7 @@ import { INK_CLASSES, lookFor, WELL_CLASSES } from "@/lib/weather";
 type Props = {
   city: City;
   unit: Unit;
+  onOpenDetail: () => void;
   onRemove: () => void;
 };
 
@@ -26,7 +27,12 @@ type Props = {
  * One city's tile. Owns its own weather request, so each card carries its own
  * loading and error state - one failing city never affects its neighbours.
  */
-export default function CityCard({ city, unit, onRemove }: Props) {
+export default function CityCard({
+  city,
+  unit,
+  onOpenDetail,
+  onRemove,
+}: Props) {
   const { weather, error, isLoading, isValidating, retry } = useWeather(city);
   const now = useNow();
   // Pending states hold for a beat so fast responses don't flick the UI.
@@ -140,6 +146,13 @@ export default function CityCard({ city, unit, onRemove }: Props) {
           </p>
         </div>
       </div>
+
+      {/* full-card press target for the detail sheet */}
+      <Button
+        onPress={onOpenDetail}
+        aria-label={`Weather details for ${city.name}`}
+        className="absolute inset-0 cursor-pointer rounded-3xl"
+      />
     </article>
   );
 }
