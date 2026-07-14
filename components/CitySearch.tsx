@@ -71,7 +71,9 @@ export default function CitySearch({ onAdd }: { onAdd: (city: City) => void }) {
         }
       }}
       allowsEmptyCollection
-      className="relative w-full md:mx-auto md:max-w-lg"
+      // while open, the input lifts above the popover's page dim - see the
+      // z-layer ladder in globals.css
+      className="relative w-full open:z-(--z-search-input) md:mx-auto md:max-w-lg"
     >
       <Label className="sr-only">Add a city to the dashboard</Label>
       <SearchIcon
@@ -83,8 +85,20 @@ export default function CitySearch({ onAdd }: { onAdd: (city: City) => void }) {
         // text-base (16px), not text-sm: iOS auto-zooms inputs below 16px
         className="w-full rounded-full bg-white py-2.5 pr-4 pl-11 text-base font-semibold text-slate-800 placeholder-slate-400 ring-2 ring-slate-300 transition focus:placeholder-slate-300 focus:ring-slate-400 focus:outline-none"
       />
-      <Popover className="w-(--trigger-width)">
-        <div className="mx-6 rounded-xl bg-white p-2">
+      {/* React Aria pins popovers at an inline z-index of 100000, which would
+          drag the page dim above the input too - the inline style override
+          slots the popover into the ladder from globals.css */}
+      <Popover
+        style={{ zIndex: "var(--z-search-popover)" }}
+        className="w-(--trigger-width) entering:animate-fade-in"
+      >
+        {/* page dim behind the results; pointer-events-none keeps every click
+            (dismissal included) working - purely decorative */}
+        <div
+          aria-hidden
+          className="pointer-events-none fixed inset-0 z-10 animate-fade-in bg-slate-900/15"
+        />
+        <div className="relative z-20 mx-6 rounded-xl bg-white p-2">
           <ListBox<City>
             renderEmptyState={() => (
               <p className="px-3.5 py-2.5 text-sm font-medium text-slate-500">

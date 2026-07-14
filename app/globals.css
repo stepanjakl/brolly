@@ -24,10 +24,35 @@
     color-scheme: light;
   }
 
+  /* mobile touch niceties: no double-tap zoom delay on controls, no grey tap
+     flash - press feedback is designed per component instead */
+  button,
+  a,
+  input {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
   /* one focus ring for every control, defined once */
   :is(a, button, input):focus-visible {
     outline: 2px solid var(--color-sky-600);
     outline-offset: 2px;
+  }
+
+  /* a transition utility on the input never reaches ::placeholder (it has its
+     own transition property), so its focus colour change animates here */
+  ::placeholder {
+    transition: color var(--default-transition-duration);
+  }
+
+  /* Reduced motion handled once, so no component can forget a motion-reduce:
+     variant. The 100ms feedback transitions intentionally stay. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+      animation: none !important;
+    }
   }
 }
 
@@ -58,6 +83,20 @@
      sheet's own fade and snap it invisible early. */
   --animate-backdrop-in: backdrop-in 0.15s linear both;
   --animate-backdrop-out: backdrop-out 0.15s linear both;
+  --animate-fade-in: fade-in 0.15s linear both;
+  --animate-fade-out: fade-out 0.15s linear both;
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+  }
+
+  @keyframes fade-out {
+    to {
+      opacity: 0;
+    }
+  }
 
   @keyframes backdrop-in {
     from {

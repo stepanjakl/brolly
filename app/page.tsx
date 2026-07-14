@@ -1,7 +1,7 @@
 "use client";
 
 import RefreshIcon from "@material-symbols/svg-700/rounded/refresh.svg";
-import { useState, useSyncExternalStore } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import CityCard from "@/components/CityCard";
 import CityDetailSheet from "@/components/CityDetailSheet";
 import CitySearch from "@/components/CitySearch";
@@ -43,6 +43,17 @@ export default function Home() {
 
   const showEmpty = hydrated && cities.length === 0;
 
+  // When the first city arrives, keep the empty state mounted briefly so it
+  // fades out instead of vanishing. A timer, not onAnimationEnd: under
+  // prefers-reduced-motion animations are disabled and the event never fires.
+  // Must outlast the 150ms fade-out in globals.css.
+  const [emptyLeaving, setEmptyLeaving] = useState(false);
+  useEffect(() => {
+    if (!emptyLeaving) return;
+    const timer = setTimeout(() => setEmptyLeaving(false), 200);
+    return () => clearTimeout(timer);
+  }, [emptyLeaving]);
+
   async function refreshAll() {
     setRefreshing(true);
     try {
@@ -54,6 +65,8 @@ export default function Home() {
   }
 
   function handleAdd(city: City) {
+    // adding the first city starts the empty state's exit fade
+    if (cities.length === 0) setEmptyLeaving(true);
     addCity(city);
     setAnnouncement(`${city.name} added to the dashboard`);
   }
@@ -68,9 +81,20 @@ export default function Home() {
   }
 
   return (
-    <main className="flex flex-1 flex-col gap-4 p-4 md:gap-6 md:p-6 lg:gap-8 lg:p-8">
-      <header className="flex items-center justify-between rounded-full bg-white py-2 pr-2 pl-6">
+    <main className="flex flex-1 flex-col gap-2 p-4 sm:gap-4 sm:p-4 md:gap-6 md:p-6 lg:gap-8 lg:p-8">
+      <header className="sticky top-2 z-(--z-header) flex items-center justify-between rounded-full bg-white py-2 pr-2 pl-6 sm:top-4 md:top-6 lg:top-8">
         <h1 className="text-xl font-bold">brolly</h1>
+        {/* hidden by default (SSR included) - the umbrella only fades in once
+            the board has cities, so it never doubles the empty state's own */}
+        <span
+          aria-hidden
+          role="img"
+          className={`text-3xl leading-none transition duration-300 ${
+            hydrated && cities.length > 0 ? "" : "scale-50 opacity-0"
+          }`}
+        >
+          ☂️
+        </span>
         <UnitToggle />
       </header>
 
@@ -80,12 +104,26 @@ export default function Home() {
           renders neither cards nor the empty state - showing "no cities yet"
           to a returning visitor for even a frame would be a lie. */}
       {hydrated ? (
-        showEmpty ? (
-          <EmptyState onAdd={handleAdd} />
+        showEmpty || emptyLeaving ? (
+          /* while leaving, the empty state fades out in place at full size
+             before the grid mounts - overlaying it on the much shorter card
+             row would clip and squeeze it mid-fade */
+          <div
+            aria-hidden={emptyLeaving || undefined}
+            className={`flex flex-1 flex-col ${
+              emptyLeaving ? "pointer-events-none animate-fade-out" : ""
+            }`}
+          >
+            <EmptyState onAdd={handleAdd} />
+          </div>
         ) : (
-          <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {cities.map((city) => (
-              <li key={cityKey(city)}>
+          <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-4 md:gap-6 lg:grid-cols-3 xl:grid-cols-4">
+            {cities.map((city, index) => (
+              <li
+                key={cityKey(city)}
+                className="animate-pop-in"
+                style={{ animationDelay: `${index * 40}ms` }}
+              >
                 <CityCard
                   city={city}
                   unit={unit}
