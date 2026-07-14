@@ -1,5 +1,10 @@
 import type { NextRequest } from "next/server";
-import { jsonError, OPENWEATHER_HOST, WEATHER_TAG } from "@/lib/openweather";
+import {
+  jsonError,
+  OPENWEATHER_HOST,
+  WEATHER_TAG,
+  weatherTag,
+} from "@/lib/openweather";
 import type { Weather } from "@/lib/types";
 
 // Proxies OpenWeather's current-weather endpoint. Two reasons to proxy:
@@ -62,8 +67,9 @@ export async function GET(request: NextRequest) {
     upstream = await fetch(
       `${UPSTREAM}?lat=${lat}&lon=${lon}&units=metric&appid=${key}`,
       {
-        // one upstream call per location per 10 min, app-wide
-        next: { revalidate: 600, tags: [WEATHER_TAG] },
+        // one upstream call per location per 10 min, app-wide. The per-city
+        // tag lets a single stale city be refreshed without expiring the rest.
+        next: { revalidate: 600, tags: [WEATHER_TAG, weatherTag(lat, lon)] },
       },
     );
   } catch {

@@ -1,11 +1,21 @@
 "use client";
 
+import { useEffect } from "react";
 import useSWR, { mutate as globalMutate, useSWRConfig } from "swr";
+import { cityKey } from "@/lib/cityKey";
 import type { City, Weather } from "@/lib/types";
 
 // The SWR key shape is owned here - anything matching or building weather
 // keys goes through these, so the two sides can't drift apart.
 const WEATHER_API_PATH = "/api/weather";
+
+// The server caches each location for 10 minutes; the client mirrors that
+// window for polling, focus throttling, and the re-add staleness check.
+const TTL_MS = 600_000;
+
+// Last fetchedAt seen per city, kept in a module map that survives removal so
+// a later re-add can tell whether the shared server cache has gone stale.
+const lastFetchedAt = new Map<string, number>();
 
 function weatherKey(city: City): string {
   return `${WEATHER_API_PATH}?lat=${city.lat}&lon=${city.lon}`;
@@ -38,9 +48,17 @@ export function useWeather(city: City) {
     fetchWeather,
     {
       // matches the server cache window - polling faster only re-reads the cache
-      refreshInterval: 600_000,
+      refreshInterval: TTL_MS,
+      // don't refetch on focus if we revalidated within the window
+      focusThrottleInterval: TTL_MS,
     },
   );
+
+  // Keep lastFetchedAt current so a later re-add can judge staleness.
+  const key = cityKey(city);
+  useEffect(() => {
+    if (data) lastFetchedAt.set(key, data.fetchedAt);
+  }, [key, data]);
 
   return {
     weather: data,
@@ -59,6 +77,27 @@ export function useWeather(city: City) {
  */
 export function forgetWeather(city: City): void {
   void globalMutate(weatherKey(city), undefined, { revalidate: false });
+}
+
+/**
+ * True when this city was fetched earlier and has since aged past the 10-min
+ * window. Never-fetched cities read as not-stale - nothing to refresh yet.
+ */
+export function isWeatherStale(city: City): boolean {
+  const at = lastFetchedAt.get(cityKey(city));
+  return at !== undefined && Date.now() - at > TTL_MS;
+}
+
+/**
+ * Force one city's next fetch upstream: expire just its cache tag, then
+ * revalidate its key. A stale re-add would otherwise be served the old numbers
+ * once more (stale-while-revalidate).
+ */
+export async function refreshCity(city: City): Promise<void> {
+  await fetch(`${WEATHER_API_PATH}/refresh?lat=${city.lat}&lon=${city.lon}`, {
+    method: "POST",
+  });
+  await globalMutate(weatherKey(city));
 }
 
 /**

@@ -11,7 +11,12 @@ import UnitToggle from "@/components/UnitToggle";
 import { addCity, removeCity, useCities } from "@/hooks/useCities";
 import { useMinPending } from "@/hooks/useMinPending";
 import { useUnit } from "@/hooks/useUnit";
-import { forgetWeather, useRefreshAllWeather } from "@/hooks/useWeather";
+import {
+  forgetWeather,
+  isWeatherStale,
+  refreshCity,
+  useRefreshAllWeather,
+} from "@/hooks/useWeather";
 import { cityKey } from "@/lib/cityKey";
 import type { City } from "@/lib/types";
 
@@ -67,7 +72,11 @@ export default function Home() {
   function handleAdd(city: City) {
     // adding the first city starts the empty state's exit fade
     if (cities.length === 0) setEmptyLeaving(true);
+    // Re-adding a city whose data aged past the 10-min window forces a real
+    // upstream refresh, so it doesn't reappear showing the old numbers.
+    const stale = isWeatherStale(city);
     addCity(city);
+    if (stale) void refreshCity(city);
     setAnnouncement(`${city.name} added to the dashboard`);
   }
 
