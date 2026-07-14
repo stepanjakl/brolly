@@ -9,11 +9,14 @@ Components and Tailwind CSS 4.
 ```bash
 npm install
 cp .env.example .env.local   # add your OpenWeather API key
-npm run dev                  # → http://localhost:3000
+npm run dev                  # → https://brolly.localhost
 ```
 
 You'll need a free [OpenWeather API key](https://home.openweathermap.org/api_keys)
-(new keys can take a couple of hours to activate).
+(new keys can take a couple of hours to activate). Dev serves over
+`https://brolly.localhost` via [portless](https://portless.sh); if you'd
+rather skip that, `npm run dev:plain` runs the stock server on
+`http://localhost:3000`.
 
 Other scripts: `npm test`, `npm run lint`, `npm run typecheck`,
 `npm run format`, `npm run build && npm start`.

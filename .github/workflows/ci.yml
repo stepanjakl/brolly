@@ -1,0 +1,32 @@
+# CI runs the same four checks a reviewer would: lint, types, tests, build.
+# Deploys are NOT here - Vercel's Git integration builds previews per branch
+# and promotes main to production on its own.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run lint
+
+      - run: npm run typecheck
+
+      - run: npm test
+
+      # The build needs no API key: the key is read per-request in route
+      # handlers, never at build time.
+      - run: npm run build
